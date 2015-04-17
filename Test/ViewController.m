@@ -18,7 +18,7 @@
     CABasicAnimation * animation;
     int heartQuint;
     CGRect shapeLayerBounds;
-    CALayer* heartLayer;
+    CALayer* clippingLayer;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -46,7 +46,7 @@
     backgroundLayer.contentsScale = [[UIScreen mainScreen] scale];
     [self.view.layer addSublayer:backgroundLayer ];
     
-    heartLayer =[CALayer layer];
+    CALayer* heartLayer =[CALayer layer];
     heartLayer.contentsGravity = kCAGravityResizeAspect;
     heartLayer.shadowOffset = CGSizeMake(0, 3);
     heartLayer.shadowRadius = 5.0;
@@ -55,9 +55,16 @@
     heartLayer.frame = CGRectInset(self.view.layer.frame, 80, 200);
     heartLayer.contents = (__bridge id) heartImage.CGImage;
     heartLayer.contentsScale = [[UIScreen mainScreen] scale];
-    heartLayer.masksToBounds = YES;
-    [heartLayer setName:@"heartLayer"];
-    [self.view.layer addSublayer:heartLayer];
+
+    
+    CALayer *clippingLayer = [CALayer layer];
+    clippingLayer.masksToBounds = YES;
+    clippingLayer.frame = CGRectInset(self.view.layer.frame, 80, 200);
+    clippingLayer.backgroundColor = [[UIColor colorWithRed:1.1 green:1 blue:0 alpha:1.0]CGColor];
+    [clippingLayer addSublayer:heartLayer];
+    [self.view clipsToBounds];
+    
+    [self.view.layer addSublayer:clippingLayer];
     
     CALayer* heartShapeLayer =[CALayer layer];
     heartShapeLayer.contentsGravity = kCAGravityResizeAspect;
@@ -80,9 +87,9 @@
     // Finally, add the animation to the layer
     [CATransaction begin];
     [CATransaction setCompletionBlock:^{
-        [heartLayer setBounds:endBounds];
+        [clippingLayer setBounds:endBounds];
     }];
-    [heartLayer addAnimation:animation forKey: nil ]; // passing in a key allows retrieving it (for example to stop=remove it)
+    [clippingLayer addAnimation:animation forKey: nil ]; // passing in a key allows retrieving it (for example to stop=remove it)
     [CATransaction commit];
     // heartShapeLayer.contents = (id) heartShapeImage.CIImage; // <- outdated code
 
@@ -105,13 +112,13 @@
     heartQuint%=5;
     float height = shapeLayerBounds.size.height * heartQuint/5.0;
     CGRect endBounds = CGRectMake(shapeLayerBounds.origin.x, shapeLayerBounds.origin.y, shapeLayerBounds.size.width, height);
-    [animation setFromValue:[NSValue valueWithCGRect:heartLayer.bounds]];
+    [animation setFromValue:[NSValue valueWithCGRect:clippingLayer.bounds]];
     [animation setToValue:[NSValue valueWithCGRect:endBounds]];
     [CATransaction begin];
     [CATransaction setCompletionBlock:^{
-        [heartLayer setBounds:endBounds];
+        [clippingLayer setBounds:endBounds];
     }];
-    [heartLayer addAnimation:animation forKey: nil ]; // passing in a key allows retrieving it (for example to stop=remove it)
+    [clippingLayer addAnimation:animation forKey: nil ]; // passing in a key allows retrieving it (for example to stop=remove it)
     [CATransaction commit];
 }
 
