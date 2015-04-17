@@ -92,6 +92,9 @@
     [CATransaction setCompletionBlock:^{
         [heartLayer setBounds:endBounds];
     }];
+    [CATransaction setValue:(id)kCFBooleanTrue
+                     forKey:kCATransactionDisableActions];
+    //[heartLayer removeFromSuperlayer];
     [heartLayer addAnimation:animation forKey: nil ]; // passing in a key allows retrieving it (for example to stop=remove it)
     [CATransaction commit];
     // heartShapeLayer.contents = (id) heartShapeImage.CIImage; // <- outdated code
