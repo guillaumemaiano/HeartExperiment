@@ -17,6 +17,8 @@
 
     CABasicAnimation * animation;
     int heartQuint;
+    CGRect shapeLayerBounds;
+    CALayer* heartLayer;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -44,7 +46,7 @@
     backgroundLayer.contentsScale = [[UIScreen mainScreen] scale];
     [self.view.layer addSublayer:backgroundLayer ];
     
-    CALayer* heartLayer =[CALayer layer];
+    heartLayer =[CALayer layer];
     heartLayer.contentsGravity = kCAGravityResizeAspect;
     heartLayer.shadowOffset = CGSizeMake(0, 3);
     heartLayer.shadowRadius = 5.0;
@@ -65,15 +67,23 @@
     heartShapeLayer.contentsScale = [[UIScreen mainScreen] scale];
     [self.view.layer addSublayer:heartShapeLayer];
    
+    CGRect endBounds = CGRectMake(0, 0, 0, 0);
+    shapeLayerBounds = heartShapeLayer.bounds;
+    
     // we'll first animate the heart to empty to show how it works
     animation = [ CABasicAnimation animationWithKeyPath:@"bounds" ];
     [animation setFromValue: [NSValue valueWithCGRect: heartLayer.frame]];
-    [animation setToValue:[NSValue valueWithCGRect: heartLayer.frame]];
+    [animation setToValue:[NSValue valueWithCGRect: CGRectMake(0, 0, 0, 0)]];
     [animation setDuration:2.0];
-    [animation setRepeatCount:1];
-    // Finally, add the animation to the layer
-    [heartLayer addAnimation:animation forKey: nil ]; // passing in a key allows retrieving it (for example to stop=remove it)
+    [animation setRepeatCount:0];
     
+    // Finally, add the animation to the layer
+    [CATransaction begin];
+    [CATransaction setCompletionBlock:^{
+        [heartLayer setBounds:endBounds];
+    }];
+    [heartLayer addAnimation:animation forKey: nil ]; // passing in a key allows retrieving it (for example to stop=remove it)
+    [CATransaction commit];
     // heartShapeLayer.contents = (id) heartShapeImage.CIImage; // <- outdated code
 
     // everytime we tap, let's fill the heart 20%
@@ -82,7 +92,7 @@
                                             action:@selector(fillHeart20:)];
     [self.view addGestureRecognizer:singleFingerTap];
 
-    
+    heartQuint = 0;
 
 
 
@@ -91,7 +101,18 @@
 
 //The event handling method
 - (void)fillHeart20:(UITapGestureRecognizer *)recognizer {
- 
+    heartQuint++;
+    heartQuint%=5;
+    float height = shapeLayerBounds.size.height * heartQuint/5.0;
+    CGRect endBounds = CGRectMake(shapeLayerBounds.origin.x, shapeLayerBounds.origin.y, shapeLayerBounds.size.width, height);
+    [animation setFromValue:[NSValue valueWithCGRect:heartLayer.bounds]];
+    [animation setToValue:[NSValue valueWithCGRect:endBounds]];
+    [CATransaction begin];
+    [CATransaction setCompletionBlock:^{
+        [heartLayer setBounds:endBounds];
+    }];
+    [heartLayer addAnimation:animation forKey: nil ]; // passing in a key allows retrieving it (for example to stop=remove it)
+    [CATransaction commit];
 }
 
 static inline double radians (double degrees) {return degrees * M_PI/180;}
