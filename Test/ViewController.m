@@ -16,6 +16,7 @@
 @implementation ViewController
 
     CABasicAnimation * animation;
+    int heartQuint;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -66,21 +67,31 @@
    
     // we'll first animate the heart to empty to show how it works
     animation = [ CABasicAnimation animationWithKeyPath:@"bounds" ];
-    //[animation setFromValue: heartLayer.frame];
-    //[animation setToValue:heartLayer.frame];
+    [animation setFromValue: [NSValue valueWithCGRect: heartLayer.frame]];
+    [animation setToValue:[NSValue valueWithCGRect: heartLayer.frame]];
     [animation setDuration:2.0];
     [animation setRepeatCount:1];
+    // Finally, add the animation to the layer
+    [heartLayer addAnimation:animation forKey: nil ]; // passing in a key allows retrieving it (for example to stop=remove it)
+    
     // heartShapeLayer.contents = (id) heartShapeImage.CIImage; // <- outdated code
-/*
- 
 
- 
- // Finally, add the animation to the layer
- redLayer.addAnimation(animation, forKey: "cornerRadius")
- */
+    // everytime we tap, let's fill the heart 20%
+    UITapGestureRecognizer *singleFingerTap =
+    [[UITapGestureRecognizer alloc] initWithTarget:self
+                                            action:@selector(fillHeart20:)];
+    [self.view addGestureRecognizer:singleFingerTap];
+
     
 
 
+
+}
+
+
+//The event handling method
+- (void)fillHeart20:(UITapGestureRecognizer *)recognizer {
+ 
 }
 
 static inline double radians (double degrees) {return degrees * M_PI/180;}
