@@ -18,7 +18,7 @@
     CABasicAnimation * animation;
     int heartQuint;
     CGRect shapeLayerBounds;
-    CALayer* heartLayer;
+    //CALayer* heartLayer;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -46,7 +46,7 @@
     backgroundLayer.contentsScale = [[UIScreen mainScreen] scale];
     [self.view.layer addSublayer:backgroundLayer ];
     
-    heartLayer =[CALayer layer];
+    CALayer* heartLayer =[CALayer layer];
     heartLayer.contentsGravity = kCAGravityResizeAspect;
     heartLayer.shadowOffset = CGSizeMake(0, 3);
     heartLayer.shadowRadius = 5.0;
@@ -56,6 +56,16 @@
     heartLayer.contents = (__bridge id) heartImage.CGImage;
     heartLayer.contentsScale = [[UIScreen mainScreen] scale];
     heartLayer.masksToBounds = YES;
+    // prevent default animation
+    // (in our case, we could just use the base, given animation,
+    // but if you want to compelxify the animation, it might be better to have full control)
+    NSMutableDictionary *newActions = [[NSMutableDictionary alloc] initWithObjectsAndKeys:[NSNull null], @"onOrderIn",
+                                       [NSNull null], @"onOrderOut",
+                                       [NSNull null], @"sublayers",
+                                       [NSNull null], @"contents",
+                                       [NSNull null], @"bounds",
+                                       nil];
+    heartLayer.actions = newActions;
     [heartLayer setName:@"heartLayer"];
     [self.view.layer addSublayer:heartLayer];
     
@@ -105,6 +115,7 @@
     heartQuint%=5;
     float height = shapeLayerBounds.size.height * heartQuint/5.0;
     CGRect endBounds = CGRectMake(shapeLayerBounds.origin.x, shapeLayerBounds.origin.y, shapeLayerBounds.size.width, height);
+    CALayer * heartLayer = [self findLayerByName:@"heartLayer" inLayer:self.view.layer];
     [animation setFromValue:[NSValue valueWithCGRect:heartLayer.bounds]];
     [animation setToValue:[NSValue valueWithCGRect:endBounds]];
     [CATransaction begin];
@@ -115,7 +126,10 @@
     [CATransaction commit];
 }
 
-static inline double radians (double degrees) {return degrees * M_PI/180;}
+static inline double radians (double degrees) {
+    return degrees * M_PI/180;
+}
+
 UIImage* rotate(UIImage* src, UIImageOrientation orientation)
 {
     UIGraphicsBeginImageContext(src.size);
@@ -146,10 +160,10 @@ UIImage* rotate(UIImage* src, UIImageOrientation orientation)
 
 - (CALayer *)findLayerByName:(NSString*) layerTagName inLayer:(CALayer*) layer{
     
-    for (CALayer *layer in [layer sublayers]) {
+    for (CALayer *sublayer in [layer sublayers]) {
         
-        if ([[layer name] isEqualToString:layerTagName]) {
-            return layer;
+        if ([[sublayer name] isEqualToString:layerTagName]) {
+            return sublayer;
         }
     }
     
